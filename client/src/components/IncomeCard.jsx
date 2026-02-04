@@ -25,7 +25,7 @@ function IncomeCard({ income, onUpdate }) {
   return (
     <div className="card income-card">
       <h2>Total Unallocated Income</h2>
-      <div className="amount">${income.toFixed(2)}</div>
+      <div className="amount">${Number(income).toFixed(2)}</div>
       
       <form onSubmit={handleAddIncome} className="inline-form">
         <input 

@@ -15,7 +15,7 @@ function App() {
         api.get('/user'),
         api.get('/envelopes')
       ]);
-      setIncome(userRes.data.amount);
+      setIncome(Number(userRes.data.amount));
       setEnvelopes(envelopesRes.data.list);
     } catch (err) {
       console.error("Error fetching data:", err);
