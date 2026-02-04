@@ -1,33 +1,58 @@
-import { useEffect, useState } from 'react'
-import api from './api'
+import { useEffect, useState } from 'react';
+import api from './api';
+import IncomeCard from './components/IncomeCard';
+import CreateEnvelopeForm from './components/CreateEnvelopeForm';
+import EnvelopeList from './components/EnvelopeList';
 
 function App() {
-  const [serverStatus, setServerStatus] = useState('Checking connection...')
-  const [dbStatus, setDbStatus] = useState('Checking DB...')
+  const [income, setIncome] = useState(0);
+  const [envelopes, setEnvelopes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = async () => {
+    try {
+      const [userRes, envelopesRes] = await Promise.all([
+        api.get('/user'),
+        api.get('/envelopes')
+      ]);
+      setIncome(Number(userRes.data.amount));
+      setEnvelopes(envelopesRes.data.list);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Check Health
-    api.get('/health')
-      .then(res => setServerStatus(res.data.message || 'Connected'))
-      .catch(err => setServerStatus('Error connecting to server: ' + err.message))
-
-    // Check DB
-    api.get('/db-check') // Assuming you add this to index.js as per plan, or we can test health first
-      .then(res => setDbStatus('Database Connected at ' + res.data.time))
-      .catch(err => setDbStatus('DB Error: ' + err.message))
-  }, [])
+    fetchData();
+  }, []);
 
   return (
     <div className="container">
-      <h1>Fullstack Boilerplate</h1>
+      <header className="app-header">
+        <h1>Envelope Budget</h1>
+      </header>
       
-      <div style={{ marginTop: '2rem', padding: '1rem', background: 'var(--card-bg)', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-        <h2>System Status</h2>
-        <p><strong>Server:</strong> {serverStatus}</p>
-        <p><strong>Database:</strong> {dbStatus}</p>
-      </div>
+      {loading ? <p>Loading...</p> : (
+        <div className="dashboard-grid">
+          <section className="left-panel">
+            <IncomeCard income={income} onUpdate={fetchData} />
+            <CreateEnvelopeForm onUpdate={fetchData} />
+          </section>
+
+          <section className="main-content">
+            <h2>Your Envelopes</h2>
+            {envelopes.length === 0 ? (
+                <p className="empty-state">No envelopes yet. Create one!</p>
+            ) : (
+                <EnvelopeList envelopes={envelopes} onUpdate={fetchData} />
+            )}
+          </section>
+        </div>
+      )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
