@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "db:reset": "psql -U postgres -d pern_boilerplate -f database.sql",
+    "db:create": "createdb test_db"
   },
   "keywords": [],
   "author": "",

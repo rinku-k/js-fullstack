@@ -1,33 +1,58 @@
 import { useEffect, useState } from 'react'
 import api from './api'
+import { Account } from './account';
 
 function App() {
-  const [serverStatus, setServerStatus] = useState('Checking connection...')
-  const [dbStatus, setDbStatus] = useState('Checking DB...')
+  const [fromAcc, setFromAccount] = useState("");
+  const [toAcc, setToAccount] = useState("");
+  const [transferAmt, setTransferAmt] = useState("");
+  const [transactions, setTransaction] = useState([]);
 
-  useEffect(() => {
-    // Check Health
-    api.get('/health')
-      .then(res => setServerStatus(res.data.message || 'Connected'))
-      .catch(err => setServerStatus('Error connecting to server: ' + err.message))
+  const handleCreateTransactions = () => {
+    api.post('/transactions', { fromAccount: fromAcc, toAccount: toAcc, amount: transferAmt })
+      .then(res => console.log(res))
+      .catch(err => console.error(err))
+  };
 
-    // Check DB
-    api.get('/db-check') // Assuming you add this to index.js as per plan, or we can test health first
-      .then(res => setDbStatus('Database Connected at ' + res.data.time))
-      .catch(err => setDbStatus('DB Error: ' + err.message))
-  }, [])
+
+  const getTransactions = () => {
+    api.get(`/transactions?fromAccount=${fromAcc}&toAccount=${toAcc}`)
+      .then(res => setTransaction(res.data.list))
+      .catch(err => console.error(err))
+  };
 
   return (
     <div className="container">
       <h1>Fullstack Boilerplate</h1>
-      
-      <div style={{ marginTop: '2rem', padding: '1rem', background: 'var(--card-bg)', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-        <h2>System Status</h2>
-        <p><strong>Server:</strong> {serverStatus}</p>
-        <p><strong>Database:</strong> {dbStatus}</p>
+      <div>
+        <Account />
+        <h1>Transactions</h1>
+        <div style={{ padding: 10, borderColor: 'red', borderWidth: 1, margin: 10, gap: 20, flexDirection: 'column' }}>
+          From Account Id : <input type='number' onChange={(e) => setFromAccount(+e.target.value)} value={fromAcc} />
+          To Account Id : <input type='number' onChange={(e) => setToAccount(+e.target.value)} value={toAcc} />
+          Amount : <input type='number' onChange={(e) => setTransferAmt(+e.target.value)} value={transferAmt} />
+          <button onClick={handleCreateTransactions}>
+            Create Transaction
+          </button>
+          <button onClick={getTransactions}>
+            List Transactions
+          </button>
+          <p>Transactions : </p>
+          {!transactions.length && <p>No Transactions Yet</p>}
+          {transactions.map((transaction, index) => (
+            <div style={{ borderWidth: 1, borderColor: 'black', margin: 10 }}>
+              <span>ID : {transaction.id} | </span>
+              <span>From : {transaction.fromaccount} | </span>
+              <span>To : {transaction.toaccount} | </span>
+              <span>Amount : {transaction.amount} | </span>
+              <span>Type : {transaction.txn_type} | </span>
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
